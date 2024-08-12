@@ -38,7 +38,7 @@ func main() {
 	amount := getInputAmount("Enter the amount to exchange:  ")
 	toCurrency := getInputCurrency(fmt.Sprintf("Enter the currency you want to exchange into (%s):", getAvailableCurrencies(fromCurrency)), fromCurrency)
 
-	result, rate := calculateExchange(fromCurrency, toCurrency, amount, currencyMap)
+	result, rate := calculateExchange(fromCurrency, toCurrency, amount, &currencyMap)
 
 	str := fmt.Sprintf(`
 %.2f %s -> %.2f %s
@@ -107,8 +107,8 @@ func getInputAmount(prompt string) float64 {
 	}
 }
 
-func calculateExchange(fromCurrency, toCurrency string, amount float64, rates currencyMap) (float64, float64) {
-	res := amount * rates[fromCurrency][toCurrency]
-	return res, rates[fromCurrency][toCurrency]
+func calculateExchange(fromCurrency, toCurrency string, amount float64, rates *currencyMap) (float64, float64) {
+	res := amount * (*rates)[fromCurrency][toCurrency]
+	return res, (*rates)[fromCurrency][toCurrency]
 
 }
