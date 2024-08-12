@@ -8,14 +8,50 @@ import (
 
 const usdToEur = 0.92  //08.08.2024
 const usdToRub = 85.55 //08.08.2024
+const eurToUsd = 1 / usdToEur
+const rubToUsd = 1 / usdToRub
+const eurToRub = usdToRub / usdToEur
+const rubToEur = 1 / eurToRub
+
+type rateMap = map[string]float64     //Aliace to the outer map type
+type currencyMap = map[string]rateMap //Aliace to the inner map type
 
 func main() {
+
+	currencyMap := make(currencyMap, 3)
+	currencyMap["usd"] = rateMap{
+		"eur": usdToEur,
+		"rub": usdToRub,
+	}
+
+	currencyMap["eur"] = rateMap{
+		"usd": eurToUsd,
+		"rub": eurToRub,
+	}
+
+	currencyMap["rub"] = rateMap{
+		"usd": rubToUsd,
+		"eur": rubToEur,
+	}
+
 	fromCurrency := getInputCurrency("Enter the currency you want to exchange (usd, eur, rub):  ")
 	amount := getInputAmount("Enter the amount to exchange:  ")
 	toCurrency := getInputCurrency(fmt.Sprintf("Enter the currency you want to exchange into (%s):", getAvailableCurrencies(fromCurrency)), fromCurrency)
 
-	result := calculateExchange(fromCurrency, toCurrency, amount)
-	fmt.Printf("Amount after exchange: %.2f %s\n", result, toCurrency)
+	result, rate := calculateExchange(fromCurrency, toCurrency, amount, &currencyMap)
+
+	str := fmt.Sprintf(`
+%.2f %s -> %.2f %s
+Exchange rate: %.2f 
+`,
+		amount,
+		fromCurrency,
+		result,
+		toCurrency,
+		rate,
+	)
+
+	fmt.Println(str)
 }
 
 func getInputCurrency(prompt string, exclude ...string) string {
@@ -71,27 +107,8 @@ func getInputAmount(prompt string) float64 {
 	}
 }
 
-func calculateExchange(fromCurrency, toCurrency string, amount float64) float64 {
-	var result float64
-	switch fromCurrency {
-	case "usd":
-		if toCurrency == "eur" {
-			result = amount * usdToEur
-		} else if toCurrency == "rub" {
-			result = amount * usdToRub
-		}
-	case "eur":
-		if toCurrency == "usd" {
-			result = amount / usdToEur
-		} else if toCurrency == "rub" {
-			result = amount / usdToEur * usdToRub
-		}
-	case "rub":
-		if toCurrency == "usd" {
-			result = amount / usdToRub
-		} else if toCurrency == "eur" {
-			result = amount / usdToRub * usdToEur
-		}
-	}
-	return result
+func calculateExchange(fromCurrency, toCurrency string, amount float64, rates *currencyMap) (float64, float64) {
+	res := amount * (*rates)[fromCurrency][toCurrency]
+	return res, (*rates)[fromCurrency][toCurrency]
+
 }
